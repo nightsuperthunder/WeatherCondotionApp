@@ -8,10 +8,10 @@ export async function getCurrentMeasurement() {
         temperatureIn: json.temperatureIn,
         humidityIn: json.humidityIn,
         ppm: json.ppm,
-        pressure: json.pressure,
+        pressure: (json.pressure / 133.3223684).toFixed(1),
         temperatureOut: json.temperatureOut,
         humidityOut: json.humidityOut,
-        measurementTime: json.dateTime
+        measurementTime: new Date(json.dateTime),
     }
 }
 

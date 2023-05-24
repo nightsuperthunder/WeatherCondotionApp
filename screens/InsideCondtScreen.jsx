@@ -13,28 +13,32 @@ import {StatusBar} from "expo-status-bar";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import ChartData from "../components/ChartData";
 import Loading from "./Loading";
+import {getCurrentMeasurement} from "../services/MeasurementService";
 
 
 //Screen Height and Width
 const { width } = Dimensions.get("window");
 
 const InsideConditionScreen = () => {
+    const [lastUpdate, setLastUpdate] = React.useState(0);
     const [mainData, setMainData] = React.useState({type: 'temperature', data: 18, dataType: '°C', description: 'Температура', icon: ''});
     const [leftData, setLeftData] = React.useState({type: 'humidity', data: 42, dataType: '%', description: 'Вологість', icon: ''});
     const [rightData, setRightData] = React.useState({type: 'co2level', data: 501, dataType: 'ppm', description: 'Рівень CO₂', icon: ''});
     const [refreshing, setRefreshing] = React.useState(false);
 
-    const onRefresh = React.useCallback(() => {
-        setRefreshing(true);
-        // setTimeout(() => {
-        //     setRefreshing(false);
-        // }, 2000);
-
-    }, []);
-
     React.useEffect(() => {
         onRefresh()
+    }, []);
 
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        getCurrentMeasurement().then((data) => {
+            mainData.data = data.temperatureIn
+            leftData.data = data.humidityIn
+            rightData.data = data.ppm
+            setLastUpdate(Math.floor((new Date() - data.measurementTime) / 1000))
+            setRefreshing(false)
+        })
     }, []);
 
     const changeMainView = (callback) => {
@@ -56,7 +60,7 @@ const InsideConditionScreen = () => {
 
             {/* Present Date */}
             <View style={styles.lastUpdate}>
-                <Text style={styles.lastUpdateText}>Останнє оновлення</Text>
+                <Text style={styles.lastUpdateText}>Останнє оновлення: {lastUpdate} сек тому</Text>
             </View>
 
             {/*/!* Current Location *!/*/}

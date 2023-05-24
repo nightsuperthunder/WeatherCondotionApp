@@ -2,17 +2,26 @@ import React from 'react';
 import {RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {styles} from "./InsideCondtScreen";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {getWeatherPredict} from "../services/MeasurementService";
 
 const WeatherPredictScreen = () => {
-    const [refreshing, setRefreshing] = React.useState(false);
-    const initCond = {clear: false, partly: false, overcast: false, cloudy: false, rain: false};
+    const [refreshing, setRefreshing] = React.useState(false)
+    const initCond = {clear: false, partly: false, overcast: false, cloudy: false, rain: false}
     const [selectedCondition, setSelected] = React.useState(initCond)
+    const [predictions, setPredictions] = React.useState([{conditions: [], weatherPrediction: '', windPrediction: ''}])
+    const [weatherPredict, setWeatherPredict] = React.useState('')
+    const [windPredict, setWindPredict] = React.useState('')
+
+    React.useEffect(() => {
+        onRefresh();
+    }, [])
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 2000);
+        getWeatherPredict().then((data) => {
+            setPredictions(data)
+            setRefreshing(false)
+        })
     }, []);
 
     const refreshControl = () => {
@@ -20,22 +29,35 @@ const WeatherPredictScreen = () => {
     }
 
     const showPredictionByCondition = (condition) => {
+        let id;
         switch (condition) {
             case 'clear':
+                id = 0;
                 setSelected({...initCond, clear: true})
                 break;
             case 'partly':
+                id = 1;
                 setSelected({...initCond, partly: true})
                 break;
             case 'overcast':
+                id = 2;
                 setSelected({...initCond, overcast: true})
                 break;
             case 'cloudy':
+                id = 3;
                 setSelected({...initCond, cloudy: true})
                 break;
             case 'rain':
+                id = 4;
                 setSelected({...initCond, rain: true})
                 break;
+        }
+        for (let prediction of predictions) {
+            if (prediction.conditions.includes(id)) {
+                setWeatherPredict(prediction.weatherPrediction)
+                setWindPredict(prediction.windPrediction)
+                break;
+            }
         }
     }
 
@@ -99,19 +121,19 @@ const WeatherPredictScreen = () => {
                 </View>
             </View>
 
-            {selectedCondition !== initCond ?
+            {weatherPredict !== '' ?
                 <View style={{flex: 0.6}}>
                     <View>
                         <Text style={stylesLocal.textCaption}>Прогноз погоди</Text>
                         <Text style={stylesLocal.textPrediction}>
-                            ;l'dsfgmoiuasdhfas fgasd gfash dfvhjsadg fkjgas gdf gkasjdhvfask dfgaksjfhbg
+                            {weatherPredict}
                         </Text>
                     </View>
 
                     <View>
                         <Text style={stylesLocal.textCaption}>Прогноз вітру</Text>
                         <Text style={stylesLocal.textPrediction}>
-                            ;l'dsfgmoiuasdhfas fgasd gfash dfvhjsadg fkjgas gdf gkasjdhvfask dfgaksjfhbg
+                            {windPredict}
                         </Text>
                     </View>
                 </View>

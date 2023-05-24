@@ -3,18 +3,29 @@ import {Text, View, ScrollView, RefreshControl, Image, TouchableOpacity} from "r
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {StatusBar} from "expo-status-bar";
 import {styles} from "./InsideCondtScreen";
+import {getCurrentMeasurement} from "../services/MeasurementService";
+import Loading from "./Loading";
 
 const OutsideConditionScreen = () => {
+    const [lastUpdate, setLastUpdate] = React.useState('');
     const [mainData, setMainData] = React.useState({type: 'temperature', data: 18, dataType: '°C', description: 'Температура', icon: ''});
     const [leftData, setLeftData] = React.useState({type: 'humidity', data: 42, dataType: '%', description: 'Вологість', icon: ''});
-    const [rightData, setRightData] = React.useState({type: 'pressure', data: 760, dataType: 'мм.рт.ст', description: 'Тиск', icon: ''});
+    const [rightData, setRightData] = React.useState({type: 'pressure', data: 760, dataType: ' мм.рт.ст', description: 'Тиск', icon: ''});
     const [refreshing, setRefreshing] = React.useState(false);
+
+    React.useEffect(() => {
+        onRefresh()
+    }, []);
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
-        setTimeout(() => {
-            setRefreshing(false);
-        }, 2000);
+        getCurrentMeasurement().then((data) => {
+            mainData.data = data.temperatureOut
+            leftData.data = data.humidityOut
+            rightData.data = data.pressure
+            setLastUpdate(data.measurementTime.toLocaleString())
+            setRefreshing(false)
+        })
     }, []);
 
 
@@ -25,13 +36,19 @@ const OutsideConditionScreen = () => {
         return (<RefreshControl  refreshing={refreshing} onRefresh={onRefresh}/>)
     }
 
+    if (refreshing) {
+        return (
+            <Loading/>
+        )
+    }
+
     return (
         <ScrollView contentContainerStyle={styles.main} refreshControl={refreshControl()}>
             <StatusBar style='inverted'/>
 
             {/* Present Date */}
             <View style={styles.lastUpdate}>
-                <Text style={styles.lastUpdateText}>Останнє оновлення</Text>
+                <Text style={styles.lastUpdateText}>Останнє оновлення: {lastUpdate}</Text>
             </View>
 
             {/*/!* Current Location *!/*/}
