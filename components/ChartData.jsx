@@ -5,6 +5,10 @@ import {LineChart} from "react-native-chart-kit";
 const { width } = Dimensions.get("window");
 
 const ChartData = ({dayData, tempData}) => {
+    if (!dayData.length || !tempData.length) {
+        return null
+    }
+
     return (
         <View style={styles.main}>
             <LineChart

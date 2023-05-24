@@ -13,7 +13,7 @@ import {StatusBar} from "expo-status-bar";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import ChartData from "../components/ChartData";
 import Loading from "./Loading";
-import {getCurrentMeasurement} from "../services/MeasurementService";
+import {getCurrentMeasurement, getMeasurementHistory} from "../services/MeasurementService";
 
 
 //Screen Height and Width
@@ -25,20 +25,26 @@ const InsideConditionScreen = () => {
     const [leftData, setLeftData] = React.useState({type: 'humidity', data: 42, dataType: '%', description: 'Вологість', icon: ''});
     const [rightData, setRightData] = React.useState({type: 'co2level', data: 501, dataType: 'ppm', description: 'Рівень CO₂', icon: ''});
     const [refreshing, setRefreshing] = React.useState(false);
+    const [selectedChartData, setSelectedChartData] = React.useState({data: [], period: []})
 
     React.useEffect(() => {
-        onRefresh()
+        onRefresh().then(() => {});
     }, []);
 
-    const onRefresh = React.useCallback(() => {
+    const onRefresh = React.useCallback( async () => {
         setRefreshing(true);
-        getCurrentMeasurement().then((data) => {
-            mainData.data = data.temperatureIn
-            leftData.data = data.humidityIn
-            rightData.data = data.ppm
-            setLastUpdate(Math.floor((new Date() - data.measurementTime) / 1000))
-            setRefreshing(false)
-        })
+        const data = await getCurrentMeasurement()
+        mainData.data = data.temperatureIn
+        leftData.data = data.humidityIn
+        rightData.data = data.ppm
+        setLastUpdate(Math.floor((new Date() - data.measurementTime) / 1000))
+
+        const chartData = await getMeasurementHistory(6);
+
+        const tempIn = chartData.map((m) => m.temperatureIn);
+        const mTime = chartData.map((m) => m.measurementTime);
+        setSelectedChartData({data: tempIn, period: mTime.map(t => t.toLocaleTimeString().substring(0, 5))})
+        setRefreshing(false)
     }, []);
 
     const changeMainView = (callback) => {
@@ -116,13 +122,12 @@ const InsideConditionScreen = () => {
                 </TouchableOpacity>
             </View>
 
-
-
             {/*Graph */}
             <View style={styles.DailyData} >
                 <ChartData
-                    dayData={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
-                    tempData={[10, 20, 15, 0, 5, 7, 20]} />
+                    dayData={selectedChartData.period}
+                    tempData={selectedChartData.data}
+                />
             </View>
 
         </ScrollView>

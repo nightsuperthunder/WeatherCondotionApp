@@ -3,8 +3,9 @@ import {Text, View, ScrollView, RefreshControl, Image, TouchableOpacity} from "r
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {StatusBar} from "expo-status-bar";
 import {styles} from "./InsideCondtScreen";
-import {getCurrentMeasurement} from "../services/MeasurementService";
+import {getCurrentMeasurement, getMeasurementHistory} from "../services/MeasurementService";
 import Loading from "./Loading";
+import ChartData from "../components/ChartData";
 
 const OutsideConditionScreen = () => {
     const [lastUpdate, setLastUpdate] = React.useState('');
@@ -12,21 +13,30 @@ const OutsideConditionScreen = () => {
     const [leftData, setLeftData] = React.useState({type: 'humidity', data: 42, dataType: '%', description: 'Вологість', icon: ''});
     const [rightData, setRightData] = React.useState({type: 'pressure', data: 760, dataType: ' мм.рт.ст', description: 'Тиск', icon: ''});
     const [refreshing, setRefreshing] = React.useState(false);
+    const [selectedChartData, setSelectedChartData] = React.useState({data: [], period: []})
+
 
     React.useEffect(() => {
         onRefresh()
     }, []);
 
-    const onRefresh = React.useCallback(() => {
+    const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
-        getCurrentMeasurement().then((data) => {
-            mainData.data = data.temperatureOut
-            leftData.data = data.humidityOut
-            rightData.data = data.pressure
-            setLastUpdate(data.measurementTime.toLocaleString())
-            setRefreshing(false)
-        })
+        const data = await getCurrentMeasurement()
+        mainData.data = data.temperatureOut
+        leftData.data = data.humidityOut
+        rightData.data = data.pressure
+        setLastUpdate(data.measurementTime.toLocaleString())
+
+        const chartData = await getMeasurementHistory(6);
+
+        const tempIn = chartData.map((m) => m.pressure);
+        const mTime = chartData.map((m) => m.measurementTime);
+        setSelectedChartData({data: tempIn, period: mTime.map(t => t.toLocaleTimeString().substring(0, 5))})
+        setRefreshing(false)
+
     }, []);
+
 
 
     const changeMainView = (callback) => {
@@ -102,25 +112,15 @@ const OutsideConditionScreen = () => {
                     </Text>
                     <Text style={styles.otherDataText}>{rightData.description}</Text>
                 </TouchableOpacity>
-                {/*<TouchableOpacity style={styles.WindSpeed}>*/}
-                {/*    <MaterialCommunityIcons*/}
-                {/*        name='weather-pouring'*/}
-                {/*        size={36}*/}
-                {/*        color='rgba(256,256,256,0.9)'*/}
-                {/*    />*/}
-                {/*    <Text style={styles.otherDataValueText}>*/}
-                {/*       760 <Text style={styles.unitText}>мм.рт.ст</Text>*/}
-                {/*    </Text>*/}
-                {/*    <Text style={styles.otherDataText}>Тиск</Text>*/}
-                {/*</TouchableOpacity>*/}
             </View>
-
 
 
             {/*Graph */}
             <View style={styles.DailyData} >
-                {/*<DailyData dayData={daysData} tempData={tempData} />*/}
-                <Text>Graph will be here</Text>
+                <ChartData
+                    dayData={selectedChartData.period}
+                    tempData={selectedChartData.data}
+                />
             </View>
 
         </ScrollView>
