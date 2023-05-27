@@ -13,80 +13,63 @@ import {StatusBar} from "expo-status-bar";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import ChartData from "../components/ChartData";
 import Loading from "./Loading";
-import {getCurrentMeasurement, getMeasurementHistory} from "../services/MeasurementService";
+import {StationDataContext} from "../utils/useStationData";
 
 
 //Screen Height and Width
 const { width } = Dimensions.get("window");
 
 const InsideConditionScreen = () => {
-    const [lastUpdate, setLastUpdate] = React.useState(0);
-    const [mainData, setMainData] = React.useState({type: 'temperature', data: 18, dataType: '°C', description: 'Температура', icon: ''});
-    const [leftData, setLeftData] = React.useState({type: 'humidity', data: 42, dataType: '%', description: 'Вологість', icon: ''});
-    const [rightData, setRightData] = React.useState({type: 'co2level', data: 501, dataType: 'ppm', description: 'Рівень CO₂', icon: ''});
-    const [refreshing, setRefreshing] = React.useState(false);
+    const [visibleData, setVisibleData] = React.useState({mainView: {icon: tempIcon}, leftView: {icon: humIcon}, rightView: {icon: co2Icon}})
     const [selectedChartData, setSelectedChartData] = React.useState({data: [], period: []})
+    // noinspection JSCheckFunctionSignatures
+    const {data: {insideParam, lastUpdate}, fetchData, isLoading} = React.useContext(StationDataContext)
 
     React.useEffect(() => {
-        onRefresh().then(() => {});
-    }, []);
+        setVisibleData({
+            mainView: {value: insideParam.temperature, dataType: '°C', description: 'Температура', icon: tempIcon },
+            leftView: {value: insideParam.humidity, dataType: '%', description: 'Вологість', icon: humIcon },
+            rightView: {value: insideParam.ppm, dataType: 'ppm', description: 'Рівень CO₂', icon: co2Icon }})
+    }, [insideParam]);
 
-    const onRefresh = React.useCallback( async () => {
-        setRefreshing(true);
-        const data = await getCurrentMeasurement()
-        mainData.data = data.temperatureIn
-        leftData.data = data.humidityIn
-        rightData.data = data.ppm
-        setLastUpdate(Math.floor((new Date() - data.measurementTime) / 1000))
-
-        const chartData = await getMeasurementHistory(6);
-
-        const tempIn = chartData.map((m) => m.temperatureIn);
-        const mTime = chartData.map((m) => m.measurementTime);
-        setSelectedChartData({data: tempIn, period: mTime.map(t => t.toLocaleTimeString().substring(0, 5))})
-        setRefreshing(false)
-    }, []);
-
-    const changeMainView = (callback) => {
+    const changeLeftView = () => {
+        setVisibleData(prevState => {
+            return {...prevState, mainView: prevState.leftView, leftView: prevState.mainView}
+        })
     }
 
-    const refreshControl = () => {
-        return (<RefreshControl  refreshing={refreshing} onRefresh={onRefresh}/>)
+    const changeRightView = () => {
+        setVisibleData(prevState => {
+            return {...prevState, mainView: prevState.rightView, rightView: prevState.mainView}
+        })
     }
 
-    if (refreshing) {
+    if (isLoading) {
         return (
             <Loading/>
         )
     }
 
+    // noinspection JSValidateTypes
     return (
-        <ScrollView contentContainerStyle={styles.main} refreshControl={refreshControl()}>
+        <ScrollView contentContainerStyle={styles.main} refreshControl={<RefreshControl onRefresh={() => {fetchData()}}/>}>
             <StatusBar style='inverted'/>
 
             {/* Present Date */}
             <View style={styles.lastUpdate}>
-                <Text style={styles.lastUpdateText}>Останнє оновлення: {lastUpdate} сек тому</Text>
+                <Text style={styles.lastUpdateText}>Дані станом на {lastUpdate}</Text>
             </View>
-
-            {/*/!* Current Location *!/*/}
-            {/*<View style={styles.location}>*/}
-            {/*    <Text style={styles.locationText}>Connected</Text>*/}
-            {/*</View>*/}
 
             {/*Selected main Icon */}
             <View style={[styles.mainIconView]}>
-                <Image
-                    style={{height: 150, width: 150}}
-                    source={require(`../assets/temperature_icon.png`)}
-                />
+                {visibleData.mainView.icon({size: 150})}
             </View>
 
             {/*Main view */}
             <View>
                 <Text style={styles.mainDataText}>
-                    {mainData.data}
-                    <Text style={{color: "rgba(256,256,256,0.4)"}}>{mainData.dataType}</Text>
+                    {visibleData.mainView.value}
+                    <Text style={{color: "rgba(256,256,256,0.4)"}}>{visibleData.mainView.dataType}</Text>
                 </Text>
             </View>
 
@@ -98,27 +81,19 @@ const InsideConditionScreen = () => {
             {/*Other  Data */}
             <View style={styles.otherData}>
                 <TouchableOpacity style={styles.otherDataOption}
-                                  onPress={() => changeMainView(setLeftData)}>
-                    <MaterialCommunityIcons
-                        name='water-outline'
-                        size={40}
-                        color='rgba(256,256,256,0.9)'
-                    />
+                                  onPress={() => {changeLeftView()}}>
+                    {visibleData.leftView.icon({size: 40})}
                     <Text style={styles.otherDataValueText}>
-                        {leftData.data}<Text style={styles.unitText}>{leftData.dataType}</Text>
+                        {visibleData.leftView.value}<Text style={styles.unitText}>{visibleData.leftView.dataType}</Text>
                     </Text>
-                    <Text style={styles.otherDataText}>{leftData.description}</Text>
+                    <Text style={styles.otherDataText}>{visibleData.leftView.description}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.otherDataOption} onPress={() => changeMainView(setRightData)}>
-                    <MaterialCommunityIcons
-                        name='molecule-co2'
-                        size={40}
-                        color='rgba(256,256,256,0.9)'
-                    />
+                <TouchableOpacity style={styles.otherDataOption} onPress={() => {changeRightView()}}>
+                    {visibleData.rightView.icon({size: 40})}
                     <Text style={styles.otherDataValueText}>
-                        {rightData.data}<Text style={styles.unitText}>{rightData.dataType}</Text>
+                        {visibleData.rightView.value}<Text style={styles.unitText}>{visibleData.rightView.dataType}</Text>
                     </Text>
-                    <Text style={styles.otherDataText}>{rightData.description}</Text>
+                    <Text style={styles.otherDataText}>{visibleData.rightView.description}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -133,6 +108,10 @@ const InsideConditionScreen = () => {
         </ScrollView>
     );
 };
+
+export const tempIcon = ({size}) => <Image style={{height: size, width: size}} source={require(`../assets/temperature_icon.png`)}/>
+export const humIcon = ({size}) => <MaterialCommunityIcons name='water-outline' size={size} color='rgba(256,256,256,0.9)'/>
+const co2Icon = ({size}) => <MaterialCommunityIcons name='molecule-co2' size={size} color='rgba(256,256,256,0.9)'/>
 
 export const styles= StyleSheet.create({
     main: {

@@ -1,6 +1,6 @@
 import React from 'react';
 import {NavigationContainer} from "@react-navigation/native";
-import InsideConditionScreen from "../screens/InsideCondtScreen";
+import InsideConditionScreen from "../screens/InsideConditionScreen";
 import OutsideConditionScreen from "../screens/OutsideConditionScreen";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 import {ColorfulTabBar} from 'react-navigation-tabbar-collection';

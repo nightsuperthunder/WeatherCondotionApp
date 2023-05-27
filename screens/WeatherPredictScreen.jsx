@@ -1,6 +1,6 @@
 import React from 'react';
 import {RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {styles} from "./InsideCondtScreen";
+import {styles} from "./InsideConditionScreen";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getWeatherPredict} from "../services/MeasurementService";
 
