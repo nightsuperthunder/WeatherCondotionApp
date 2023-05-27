@@ -6,6 +6,7 @@ import {humIcon, styles, tempIcon} from "./InsideConditionScreen";
 import Loading from "./Loading";
 import ChartData from "../components/ChartData";
 import {StationDataContext} from "../utils/useStationData";
+import {getMeasurementHistory} from "../services/MeasurementService";
 
 const OutsideConditionScreen = () => {
     const [visibleData, setVisibleData] = React.useState({mainView: {icon: tempIcon}, leftView: {icon: humIcon}, rightView: {icon: pressureIcon}})
@@ -18,8 +19,17 @@ const OutsideConditionScreen = () => {
         setVisibleData({
             mainView: {value: outsideParam.temperature, dataType: '°C', description: 'Температура', icon: tempIcon },
             leftView: {value: outsideParam.humidity, dataType: '%', description: 'Вологість', icon: humIcon },
-            rightView: {value: outsideParam.pressure, dataType: 'мм.рт.ст', description: 'Тиск', icon: pressureIcon }})
+            rightView: {value: outsideParam.pressure, dataType: 'мм.рт.ст', description: 'Тиск', icon: pressureIcon }
+        })
+
+        getMeasurementHistory(6).then(res => {
+            setSelectedChartData({
+                data: res.map(m => m.temperatureOut),
+                period: res.map(m => m.measurementTime.toLocaleTimeString().substring(0, 5))
+            })
+        })
     }, [outsideParam]);
+
 
     const changeLeftView = () => {
         setVisibleData(prevState => {

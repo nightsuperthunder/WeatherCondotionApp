@@ -27,9 +27,6 @@ export async function getMeasurementHistory(hours) {
     const timeNow = Math.floor(Date.now() / 1000);
     const timeStart = timeNow - hours * 60 * 60;
 
-    console.log(API_URL +
-        `/getMeasurement/by/timestampStart=${timeStart}&timestampEnd=${timeNow}`)
-
     const response = await fetch(API_URL +
         `/getMeasurement/by/timestampStart=${timeStart}&timestampEnd=${timeNow}`)
 

@@ -1,5 +1,5 @@
 import React from "react";
-import {getCurrentMeasurement, getMeasurementHistory} from "../services/MeasurementService";
+import {getCurrentMeasurement} from "../services/MeasurementService";
 
 export const useStationData = () => {
     const [insideParam, setInsideParam] = React.useState({temperature: 0, humidity: 0, ppm: 0});
@@ -8,6 +8,7 @@ export const useStationData = () => {
     const [isLoading, setIsLoading] = React.useState(false);
 
     const fetchData = async ()=> {
+        console.log('Fetching data...')
         setIsLoading(true);
         const data = await getCurrentMeasurement();
         setInsideParam({temperature: data.temperatureIn, humidity: data.humidityIn, ppm: data.ppm});

@@ -14,6 +14,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import ChartData from "../components/ChartData";
 import Loading from "./Loading";
 import {StationDataContext} from "../utils/useStationData";
+import {getMeasurementHistory} from "../services/MeasurementService";
 
 
 //Screen Height and Width
@@ -29,7 +30,15 @@ const InsideConditionScreen = () => {
         setVisibleData({
             mainView: {value: insideParam.temperature, dataType: '°C', description: 'Температура', icon: tempIcon },
             leftView: {value: insideParam.humidity, dataType: '%', description: 'Вологість', icon: humIcon },
-            rightView: {value: insideParam.ppm, dataType: 'ppm', description: 'Рівень CO₂', icon: co2Icon }})
+            rightView: {value: insideParam.ppm, dataType: 'ppm', description: 'Рівень CO₂', icon: co2Icon }
+        })
+
+        getMeasurementHistory(6).then(res => {
+            setSelectedChartData({
+                data: res.map(m => m.temperatureIn),
+                period: res.map(m => m.measurementTime.toLocaleTimeString().substring(0, 5))
+            })
+        })
     }, [insideParam]);
 
     const changeLeftView = () => {

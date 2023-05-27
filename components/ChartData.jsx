@@ -1,12 +1,12 @@
 import React from 'react';
-import {View, StyleSheet, Dimensions} from "react-native";
+import {View, StyleSheet, Dimensions, ActivityIndicator} from "react-native";
 import {LineChart} from "react-native-chart-kit";
 
 const { width } = Dimensions.get("window");
 
 const ChartData = ({dayData, tempData}) => {
     if (!dayData.length || !tempData.length) {
-        return null
+        return (<ActivityIndicator size={"large"} style={{alignItems: "center", flex: 1}}/>)
     }
 
     return (
