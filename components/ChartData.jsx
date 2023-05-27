@@ -4,9 +4,13 @@ import {LineChart} from "react-native-chart-kit";
 
 const { width } = Dimensions.get("window");
 
-const ChartData = ({dayData, tempData}) => {
-    if (!dayData.length || !tempData.length) {
+const ChartData = ({dayData, tempData, isChartLoading}) => {
+    if (isChartLoading) {
         return (<ActivityIndicator size={"large"} style={{alignItems: "center", flex: 1}}/>)
+    }
+
+    if (!dayData.length || !tempData.length) {
+        return null
     }
 
     return (

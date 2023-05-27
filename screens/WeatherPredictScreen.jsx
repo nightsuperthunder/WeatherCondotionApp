@@ -1,32 +1,16 @@
 import React from 'react';
-import {RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {styles} from "./InsideConditionScreen";
+import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
-import {getWeatherPredict} from "../services/MeasurementService";
+import {StationDataContext} from "../utils/useStationData";
+import {styles} from "../styles";
 
 const WeatherPredictScreen = () => {
-    const [refreshing, setRefreshing] = React.useState(false)
     const initCond = {clear: false, partly: false, overcast: false, cloudy: false, rain: false}
     const [selectedCondition, setSelected] = React.useState(initCond)
-    const [predictions, setPredictions] = React.useState([{conditions: [], weatherPrediction: '', windPrediction: ''}])
     const [weatherPredict, setWeatherPredict] = React.useState('')
     const [windPredict, setWindPredict] = React.useState('')
-
-    React.useEffect(() => {
-        onRefresh();
-    }, [])
-
-    const onRefresh = React.useCallback(() => {
-        setRefreshing(true);
-        getWeatherPredict().then((data) => {
-            setPredictions(data)
-            setRefreshing(false)
-        })
-    }, []);
-
-    const refreshControl = () => {
-        return (<RefreshControl  refreshing={refreshing} onRefresh={onRefresh}/>)
-    }
+    // noinspection JSCheckFunctionSignatures
+    const {data: {predictions}} = React.useContext(StationDataContext)
 
     const showPredictionByCondition = (condition) => {
         let id;
@@ -62,12 +46,7 @@ const WeatherPredictScreen = () => {
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.main} refreshControl={refreshControl()}>
-            {/* Present Date */}
-            <View style={styles.lastUpdate}>
-                <Text style={styles.lastUpdateText}>Останнє оновлення</Text>
-            </View>
-
+        <View style={styles.main}>
             <View style={{flex: 0.5, marginTop: 10}}>
                 <Text style={{...styles.locationText, alignSelf: "center",}}>Виберіть які зараз погодні умови</Text>
                 <View style={{...styles.otherData, flex: 1, marginTop: 30}}>
@@ -138,7 +117,7 @@ const WeatherPredictScreen = () => {
                     </View>
                 </View>
             : null}
-        </ScrollView>
+        </View>
     );
 };
 
