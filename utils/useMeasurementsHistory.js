@@ -11,7 +11,7 @@ export const useMeasurementsHistory = () => {
         getMeasurementHistory(6).then(res => {
             setSelectedChartData({
                 data: getRequiredArray(type, res),
-                period: res.map(m => m.measurementTime.toLocaleTimeString().substring(0, 5))
+                period: res.map(m => m.measurementTime.format("HH:mm"))
             })
             setIsLoading(false)
         })
