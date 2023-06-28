@@ -4,9 +4,10 @@ import {StationDataContext, useStationData} from "./utils/useStationData";
 import {RefreshControl, ScrollView, Text, View} from "react-native";
 import Loading from "./screens/Loading";
 import {styles} from "./styles";
+import ErrorPage from "./screens/ErrorPage";
 
 export default function App() {
-    const {data, fetchData, isLoading} = useStationData();
+    const {data, fetchData, isLoading, isError} = useStationData();
 
     React.useEffect(() => {
         fetchData();
@@ -15,6 +16,12 @@ export default function App() {
     if (isLoading) {
         return (
             <Loading/>
+        )
+    }
+
+    if (isError) {
+        return (
+            <ErrorPage refresh={fetchData}/>
         )
     }
 
