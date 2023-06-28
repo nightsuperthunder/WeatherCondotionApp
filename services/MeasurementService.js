@@ -1,4 +1,5 @@
 import {API_URL} from "../config";
+import moment from "moment";
 
 export async function getCurrentMeasurement() {
     const response = await fetch(API_URL + '/getMeasurement/current')
@@ -11,7 +12,7 @@ export async function getCurrentMeasurement() {
         pressure: (json.pressure / 133.3223684).toFixed(1),
         temperatureOut: json.temperatureOut,
         humidityOut: json.humidityOut,
-        measurementTime: new Date(json.dateTime),
+        measurementTime: moment.utc(json.dateTime).local(),
     }
 }
 
@@ -33,27 +34,23 @@ export async function getMeasurementHistory(hours) {
     const dataJson = await response.json();
 
     const interval = Math.floor(dataJson.length / 6); // Interval between data points
-    const aggregatedData = [];
+    const measurements = [];
 
-    for (let i = 0; i < dataJson.length; i += interval) {
-        const start = i;
-        const end = i + interval;
-
-        // Extract the relevant properties for aggregation
-        const dataSubset = dataJson.slice(start, end);
-        const averageValues = {
-            measurementTime: new Date(dataSubset[Math.floor(dataSubset.length / 2)].dateTime), // Use the dateTime of the middle data point in the interval
-            temperatureIn:  parseFloat((dataSubset.reduce((sum, measurement) => sum + measurement.temperatureIn, 0) / dataSubset.length).toFixed(1)),
-            temperatureOut: parseFloat((dataSubset.reduce((sum, measurement) => sum + measurement.temperatureOut, 0) / dataSubset.length).toFixed(1)),
-            humidityIn:     parseFloat((dataSubset.reduce((sum, measurement) => sum + measurement.humidityIn, 0) / dataSubset.length).toFixed(1)),
-            humidityOut:    parseFloat((dataSubset.reduce((sum, measurement) => sum + measurement.humidityOut, 0) / dataSubset.length).toFixed(1)),
-            pressure:       parseFloat((dataSubset.reduce((sum, measurement) => sum + measurement.pressure, 0) / dataSubset.length / 133.3223684).toFixed(1)),
-            ppm:            parseFloat((dataSubset.reduce((sum, measurement) => sum + measurement.ppm, 0) / dataSubset.length).toFixed(1))
+    for (let i = dataJson.length - 1; i > 0; i -= interval) {
+        const values = {
+            measurementTime: moment.utc(dataJson[i].dateTime).local(), // Use the dateTime of the middle data point in the interval
+            temperatureIn:  parseFloat(dataJson[i].temperatureIn.toFixed(1)),
+            temperatureOut: parseFloat(dataJson[i].temperatureOut.toFixed(1)),
+            humidityIn:     parseFloat(dataJson[i].humidityIn.toFixed(1)),
+            humidityOut:    parseFloat(dataJson[i].humidityOut.toFixed(1)),
+            pressure:       parseFloat((dataJson[i].pressure / 133.3223684).toFixed(1)),
+            ppm:            parseFloat(dataJson[i].ppm.toFixed(1))
         };
 
-        // Add the average value to the aggregated data array
-        aggregatedData.push(averageValues);
+        measurements.push(values);
     }
 
-    return aggregatedData;
+    measurements.reverse()
+
+    return measurements;
 }
