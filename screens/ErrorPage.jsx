@@ -11,7 +11,7 @@ const ErrorPage = ({refresh}) => {
           loop source={require('../assets/animations/ErrorAnimation.json')} 
           style={{height:250,width:250}}
       />
-        <Button title='refesh' onPress={refresh}/>
+        <Button title='refresh' onPress={refresh}/>
     </View>
   )
 }

@@ -1,10 +1,11 @@
 import React from 'react';
+import {Image} from "react-native";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
+
 import {StationDataContext} from "../utils/useStationData";
 import {useMeasurementsHistory} from "../utils/useMeasurementsHistory";
 import {DataTypes} from "../utils/DataTypes";
 import ConditionView from "../components/ConditionView";
-import {Image} from "react-native";
 
 const OutsideConditionScreen = () => {
     const [visibleData, setVisibleData] = React.useState({mainView: {icon: tempIcon}, leftView: {icon: humIcon}, rightView: {icon: pressureIcon}})
